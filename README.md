@@ -1,7 +1,23 @@
 ranking
 ==============================
 
-TBA
+The purpose of this project is to do a reproducible pipeline with a ranking similar questions based on [quora dataset](https://www.kaggle.com/c/quora-question-pairs). To make it reproducible and readable I want to use such technologies/libraries in my project:
+
+1. __Poetry__ — to keep track of dependencies
+2. __Docker + FastAPI__ — to make a microservice with an isolated environment
+3. __Cookiecutter__’s DS project template — for easier navigation
+4. __logging__ - for service tracking
+5. I want to do __docstrings__ and explicitly write data types of all incoming parameters and outputs of functions
+6. Make it a library with setuptools or Poetry
+7. Use __linters__ for codestyle
+8. Do commits aligned with [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/)
+
+Optional (if I will have time):
+1. __mlflow__ - for keep track of experimentation
+
+Stack
+------------
+<img height="32" width="32" src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Python-logo-notext.svg/1869px-Python-logo-notext.svg.png" /> <img height="32" width="64" src="https://miro.medium.com/max/633/0*oek9uPntF7vtHJP8.png" /> <img height="32" width="28" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/PyTorch_logo_icon.svg/640px-PyTorch_logo_icon.svg.png" /> <img height="32" width="40" src="https://www.docker.com/wp-content/uploads/2022/03/vertical-logo-monochromatic.png" /> <img height="32" width="64" src="https://repository-images.githubusercontent.com/260928305/92388600-8d1c-11ea-9993-a726466b5099" /> <img height="32" width="48" src="https://engineering.fb.com/wp-content/uploads/2017/03/faiss_logo.png" />
 
 Project Organization
 ------------
