@@ -3,17 +3,20 @@ ranking
 
 The purpose of this project is to do a reproducible pipeline with a ranking similar questions based on [quora dataset](https://www.kaggle.com/c/quora-question-pairs). To make it reproducible and readable I want to use such technologies/libraries in my project:
 
-1. __Poetry__ — to keep track of dependencies
+- Reproducibility:
+1. __Poetry__ — to keep track of dependencies and make it library
 2. __Docker + FastAPI__ — to make a microservice with an isolated environment
-3. __Cookiecutter__’s DS project template — for easier navigation
-4. __logging__ - for service tracking
-5. I want to do __docstrings__ and explicitly write data types of all incoming parameters and outputs of functions
-6. Make it a library with setuptools or Poetry
-7. Use __linters__ for codestyle
-8. Do commits aligned with [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/)
+3. __mlflow__ - for keep track of experimentation
 
-Optional (if I will have time):
-1. __mlflow__ - for keep track of experimentation
+- Readability:
+1. __Cookiecutter__’s DS project template — for easier navigation
+2. I want to do __docstrings__ and explicitly write data types with __Typing__
+3. Use __linters__ like __flake8__ or __black__ for codestyle
+
+- CI/CD, tracking etc
+1. __logging__ - for service tracking
+2. Do commits aligned with [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/)
+
 
 Stack
 ------------
