@@ -5,18 +5,21 @@ description = ""
 authors = ["Gwynny <yahoo660@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "ranking_service"}]
+packages = [{ include = "ranking_service" }]
 
 [tool.poetry.dependencies]
 python = "^3.9"
 
 [tool.poetry.dev-dependencies]
-pytest = "^3.0"
-torch = "^1.10.0"
+black = "^22.12.0"
+ipykernel = "^6.20.1"
 faiss-cpu = "^1.7.3"
 flake8 = "^6.0.0"
 mypy = "^0.991"
-black = "^22.12.0"
+numpy = "^1.24.0"
+pandas = "^1.5.0"
+pytest = "^3.0"
+torch = "^1.10.0"
 
 [build-system]
 requires = ["poetry-core"]
