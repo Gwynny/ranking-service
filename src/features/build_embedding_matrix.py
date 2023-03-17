@@ -6,7 +6,7 @@ class EmbeddingMatrixBuilder:
     def __init__(self, glove_path, uniform_bound, random_seed):
         self.glove_path = glove_path
         self.uniform_bound = uniform_bound
-        self.random_seed = random_seed
+        np.random.seed(random_seed)
 
     def _read_glove_embeddings(self) -> Dict[str, List[str]]:
         with open(self.glove_path, encoding='utf-8') as file:
@@ -17,35 +17,34 @@ class EmbeddingMatrixBuilder:
                 glove_dict[word] = embedding
         return glove_dict
 
+    def _generate_random_vector(self, emb_dim: int) -> np.array:
+        vec = np.random.uniform(low=-self.uniform_bound,
+                                high=self.uniform_bound,
+                                size=emb_dim)
+        return vec
+
     def _create_vocab_and_emb_matrix(self,
                                      retrieved_words: List[str],
                                      glove_dict: Dict[str, List[str]],
                                      emb_dim: int
                                      ) -> Tuple[np.ndarray, Dict[str, int], List[str]]:
-        np.random.seed(self.random_seed)
-        emb_matrix = unk_words = []
-        pad_vec = np.random.uniform(low=-self.uniform_bound,
-                                    high=self.uniform_bound,
-                                    size=emb_dim)
-        oov_vec = np.random.uniform(low=-self.uniform_bound,
-                                    high=self.uniform_bound,
-                                    size=emb_dim)
+        pad_vec = self._generate_random_vector(emb_dim)
+        oov_vec = self._generate_random_vector(emb_dim)
+        emb_matrix = []
         emb_matrix.append(pad_vec)
         emb_matrix.append(oov_vec)
 
-        vocab = {}
+        vocab, unk_words = {}, []
         vocab['PAD'], vocab['OOV'] = 0, 1
         for ind, token in enumerate(retrieved_words, 2):
             if token in glove_dict.keys():
                 emb_matrix.append(glove_dict[token])
-                vocab[token] = ind
             else:
                 unk_words.append(token)
-                vocab[token] = ind
-                random_emb = np.random.uniform(low=-self.uniform_bound,
-                                               high=self.uniform_bound,
-                                               size=emb_dim)
+                random_emb = self._generate_random_vector(emb_dim)
                 emb_matrix.append(random_emb)
+            vocab[token] = ind
+
         emb_matrix = np.array(emb_matrix).astype(float)
         return (emb_matrix, vocab, unk_words)
 
