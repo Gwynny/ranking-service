@@ -12,6 +12,7 @@ class TextRetriever:
         self.val_df = pd.read_csv(val_path, sep="\t")
 
     def _rename_cols_and_drop_na(self, quora_df: pd.DataFrame) -> pd.DataFrame:
+        # TODO: add docstring
         quora_df = quora_df.dropna(axis=0, how="any").reset_index(drop=True)
         quora_df_cols_renamed = pd.DataFrame(
             {
@@ -25,12 +26,14 @@ class TextRetriever:
         return quora_df_cols_renamed
 
     def _handle_punctuation(self, input_str: str) -> str:
+        # TODO: add docstring
         translator = str.maketrans(string.punctuation,
                                    " " * len(string.punctuation))
         new_str = input_str.translate(translator)
         return new_str
 
     def _lower_and_tokenize_words(self, input_str: str) -> List[str]:
+        # TODO: add docstring
         no_punctuation_str = self._handle_punctuation(input_str)
         lowered_str = no_punctuation_str.lower()
         splitted_doc = nltk.word_tokenize(lowered_str)
@@ -40,17 +43,16 @@ class TextRetriever:
                            vocab: Dict[str, int],
                            min_occurancies: int
                            ) -> Dict[str, int]:
+        # TODO: add docstring
         filtered_vocab = {
             x: count for x, count in vocab.items() if count >= min_occurancies
         }
         return filtered_vocab
 
-    def get_all_tokens(self,
-                       list_of_df: List[pd.DataFrame],
-                       min_occurancies: int
-                       ) -> List[str]:
+    def get_all_tokens(self, min_occurancies: int) -> List[str]:
+        # TODO: add docstring
         preped_series = []
-        for df in list_of_df:
+        for df in [self.train_df, self.val_df]:  # TODO: write check if df is pd.DataFrame
             df = self._rename_cols_and_drop_na(df)
             preped_question1 = df["text_left"].apply(
                                 self._lower_and_tokenize_words)
