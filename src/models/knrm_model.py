@@ -80,7 +80,7 @@ class KNRM(torch.nn.Module):
         # how-to-compute-the-cosine-similarity-in-pytorch-for-all-rows-in-a-matrix-with-re
         eps = 1e-8
         query_m, doc_m = self.embeddings(query), self.embeddings(doc)
-        query_norm = doc_m.norm(dim=2)[:, :, None]
+        query_norm = query_m.norm(dim=2)[:, :, None]
         doc_norm = doc_m.norm(dim=2)[:, :, None]
         query_normalised = query_m / torch.clamp(query_norm, min=eps)
         doc_normalised = doc_m / torch.clamp(doc_norm, min=eps)
