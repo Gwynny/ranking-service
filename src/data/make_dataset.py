@@ -43,14 +43,14 @@ class RankingDataset(torch.utils.data.Dataset):
     def __init__(self, index_pairs_or_triplets: List[List[Union[str, float]]],
                  idx_to_text_mapping: Dict[int, str],
                  vocab: Dict[str, int],
-                 oov_val: int,
                  preproc_func: Callable,
+                 oov_token: str = 'OOV',
                  max_len: int = 30):
         self.index_pairs_or_triplets = index_pairs_or_triplets
         self.idx_to_text_mapping = idx_to_text_mapping
         self.vocab = vocab
-        self.oov_val = oov_val
         self.preproc_func = preproc_func
+        self.oov_val = self.vocab[oov_token]
         self.max_len = max_len
 
     @classmethod
@@ -58,22 +58,7 @@ class RankingDataset(torch.utils.data.Dataset):
                    batch_objs: List[Union[Dict[str, torch.Tensor], torch.FloatTensor]]
                    ) -> Union[Tuple[OUT_DICT, OUT_DICT, torch.FloatTensor],
                               Tuple[OUT_DICT, torch.FloatTensor]]:
-        max_len_q1, max_len_d1 = -1, -1
-        max_len_q2, max_len_d2 = -1, -1
-
-        is_triplets = False
-        for elem in batch_objs:
-            if len(elem) == 3:
-                left_elem, right_elem, label = elem
-                is_triplets = True
-            else:
-                left_elem, label = elem
-
-            max_len_q1 = max(len(left_elem['query']), max_len_q1)
-            max_len_d1 = max(len(left_elem['document']), max_len_d1)
-            if len(elem) == 3:
-                max_len_q2 = max(len(right_elem['query']), max_len_q2)
-                max_len_d2 = max(len(right_elem['document']), max_len_d2)
+        is_triplets = False if len(batch_objs[0]) == 2 else True
 
         q1s, d1s = [], []
         q2s, d2s = [], []
@@ -84,17 +69,11 @@ class RankingDataset(torch.utils.data.Dataset):
             else:
                 left_elem, label = elem
 
-            pad_len1 = max_len_q1 - len(left_elem['query'])
-            pad_len2 = max_len_d1 - len(left_elem['document'])
+            q1s.append(left_elem['query'])
+            d1s.append(left_elem['document'])
             if is_triplets:
-                pad_len3 = max_len_q2 - len(right_elem['query'])
-                pad_len4 = max_len_d2 - len(right_elem['document'])
-
-            q1s.append(left_elem['query'] + [0] * pad_len1)
-            d1s.append(left_elem['document'] + [0] * pad_len2)
-            if is_triplets:
-                q2s.append(right_elem['query'] + [0] * pad_len3)
-                d2s.append(right_elem['document'] + [0] * pad_len4)
+                q2s.append(right_elem['query'])
+                d2s.append(right_elem['document'])
             labels.append([float(label)])
 
         q1s, d1s = torch.LongTensor(q1s), torch.LongTensor(d1s)
@@ -108,7 +87,7 @@ class RankingDataset(torch.utils.data.Dataset):
             return ret_left, ret_right, labels
         else:
             return ret_left, labels
-    
+
     @classmethod
     def get_question_groups(cls,
                             inp_df: pd.DataFrame,
@@ -128,8 +107,12 @@ class RankingDataset(torch.utils.data.Dataset):
         return len(self.index_pairs_or_triplets)
 
     def _tokenized_text_to_index(self, tokenized_text: List[str]) -> List[int]:
+        input_len = len(tokenized_text)
+        if input_len > 30:
+            text = tokenized_text[:self.max_len]
+        else:
+            text = tokenized_text + (self.max_len - input_len) * [self.vocab['PAD']]
         token_idxs = []
-        text = tokenized_text[:self.max_len]
         for token in text:
             token_idxs.append(self.vocab.get(token, self.oov_val))
         return token_idxs
