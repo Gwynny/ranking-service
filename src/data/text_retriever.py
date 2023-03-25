@@ -32,7 +32,7 @@ class TextRetriever:
         new_str = input_str.translate(translator)
         return new_str
 
-    def _lower_and_tokenize_words(self, input_str: str) -> List[str]:
+    def lower_and_tokenize_words(self, input_str: str) -> List[str]:
         # TODO: add docstring
         no_punctuation_str = self._handle_punctuation(input_str)
         lowered_str = no_punctuation_str.lower()
@@ -55,9 +55,9 @@ class TextRetriever:
         for df in [self.train_df, self.val_df]:  # TODO: write check if df is pd.DataFrame
             df = self._rename_cols_and_drop_na(df)
             preped_question1 = df["text_left"].apply(
-                                self._lower_and_tokenize_words)
+                                self.lower_and_tokenize_words)
             preped_question2 = df["text_right"].apply(
-                                self._lower_and_tokenize_words)
+                                self.lower_and_tokenize_words)
             preped_series.append(preped_question1)
             preped_series.append(preped_question2)
 
