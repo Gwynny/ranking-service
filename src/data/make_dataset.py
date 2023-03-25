@@ -19,6 +19,8 @@ def prepare_quora_df(quora_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_idx_to_text_mapping(inp_df: pd.DataFrame) -> Dict[str, str]:
+    inp_df['id_left'] = inp_df['id_left'].astype(str)
+    inp_df['id_right'] = inp_df['id_right'].astype(str)
     left_dict = (
         inp_df[
             ['id_left', 'text_left']
@@ -130,9 +132,9 @@ class RankingDataset(torch.utils.data.Dataset):
 class TrainTripletsDataset(RankingDataset):
     def __getitem__(self, idx: int):
         triplets = self.index_pairs_or_triplets[idx]
-        query_tokens = self._convert_text_idx_to_token_idxs(str(triplets[0]))
-        left_doc_tokens = self._convert_text_idx_to_token_idxs(str(triplets[1]))
-        right_doc_tokens = self._convert_text_idx_to_token_idxs(str(triplets[2]))
+        query_tokens = self._convert_text_idx_to_token_idxs(triplets[0])
+        left_doc_tokens = self._convert_text_idx_to_token_idxs(triplets[1])
+        right_doc_tokens = self._convert_text_idx_to_token_idxs(triplets[2])
         label = triplets[3]
 
         left_query_doc = {'query': query_tokens, 'document': left_doc_tokens}
@@ -176,8 +178,8 @@ class TrainTripletsDataset(RankingDataset):
 class ValPairsDataset(RankingDataset):
     def __getitem__(self, idx: int):
         pairs = self.index_pairs_or_triplets[idx]
-        query_tokens = self._convert_text_idx_to_token_idxs(str(pairs[0]))
-        doc_tokens = self._convert_text_idx_to_token_idxs(str(pairs[1]))
+        query_tokens = self._convert_text_idx_to_token_idxs(pairs[0])
+        doc_tokens = self._convert_text_idx_to_token_idxs(pairs[1])
         label = pairs[2]
         query_doc = {'query': query_tokens, 'document': doc_tokens}
         return query_doc, label
