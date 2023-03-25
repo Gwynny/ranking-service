@@ -151,6 +151,7 @@ class TrainTripletsDataset(RankingDataset):
                               ) -> List[List[Union[str, float]]]:
         np.random.seed(seed)
         groups = RankingDataset.get_question_groups(inp_df, min_group_size)
+        all_right_ids = inp_df.id_right.values
         out_triplets = []
         for id_left, group in groups:
             if group['label'].sum() == 0:
@@ -167,6 +168,10 @@ class TrainTripletsDataset(RankingDataset):
                 np.random.shuffle(pos_labels_permutations)
                 for ids in pos_labels_permutations[:num_positive_examples]:
                     out_triplets.append([id_left, ids[0], ids[1], 1.0])
+
+                random_neg_sample = np.random.choice(all_right_ids, 1, replace=False)
+                pos_sample_id = pos_labels_permutations[-1][0]
+                out_triplets.append([id_left, pos_sample_id, random_neg_sample[0], 1.0])
 
                 zeros_permutations = list(itertools.combinations(zeros_ids, 2))
                 np.random.shuffle(zeros_permutations)
