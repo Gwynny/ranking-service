@@ -1,15 +1,15 @@
 import numpy as np
+from scipy.stats import truncnorm
 from typing import Dict, List, Tuple
 
 
 class EmbeddingMatrixBuilder:
-    def __init__(self, glove_path, uniform_bound, random_seed):
-        self.glove_path = glove_path
-        self.uniform_bound = uniform_bound
+    def __init__(self, random_vec_bound: float, random_seed: int):
+        self.random_vec_bound = random_vec_bound
         np.random.seed(random_seed)
 
-    def _read_glove_embeddings(self) -> Dict[str, List[str]]:
-        with open(self.glove_path, encoding='utf-8') as file:
+    def _read_glove_embeddings(self, glove_path: str) -> Dict[str, List[str]]:
+        with open(glove_path, encoding='utf-8') as file:
             glove_dict = {}
             for line in file:
                 splitted_line = line.split()
@@ -18,9 +18,7 @@ class EmbeddingMatrixBuilder:
         return glove_dict
 
     def _generate_random_vector(self, emb_dim: int) -> np.array:
-        vec = np.random.uniform(low=-self.uniform_bound,
-                                high=self.uniform_bound,
-                                size=emb_dim)
+        vec = truncnorm.rvs(-self.random_vec_bound, self.random_vec_bound, size=emb_dim)
         return vec
 
     def _create_vocab_and_emb_matrix(self,
@@ -28,7 +26,7 @@ class EmbeddingMatrixBuilder:
                                      glove_dict: Dict[str, List[str]],
                                      emb_dim: int
                                      ) -> Tuple[np.ndarray, Dict[str, int], List[str]]:
-        pad_vec = self._generate_random_vector(emb_dim)
+        pad_vec = np.zeros((emb_dim, ))
         oov_vec = self._generate_random_vector(emb_dim)
         emb_matrix = []
         emb_matrix.append(pad_vec)
@@ -49,9 +47,10 @@ class EmbeddingMatrixBuilder:
         return (emb_matrix, vocab, unk_words)
 
     def create_glove_emb_from_file(self,
+                                   glove_path: str,
                                    retrieved_words: List[str]
                                    ) -> Tuple[np.ndarray, Dict[str, int], List[str]]:
-        glove_dict = self._read_glove_embeddings()
+        glove_dict = self._read_glove_embeddings(glove_path)
         emb_dim = len(glove_dict['the'])
 
         emb_matrix, vocab, unk_words = self._create_vocab_and_emb_matrix(
