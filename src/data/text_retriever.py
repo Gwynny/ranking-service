@@ -1,5 +1,6 @@
 import itertools
 import nltk
+import pickle
 import string
 import pandas as pd
 from collections import Counter
@@ -49,17 +50,21 @@ class TextRetriever:
         }
         return filtered_vocab
 
-    def get_all_tokens(self, min_occurancies: int) -> List[str]:
+    def get_all_tokens(self,
+                       min_occurancies: int,
+                       save_path: str = None
+                       ) -> List[str]:
         # TODO: add docstring
         preped_series = []
-        for df in [self.train_df, self.val_df]:  # TODO: write check if df is pd.DataFrame
-            df = self._rename_cols_and_drop_na(df)
-            preped_question1 = df["text_left"].apply(
-                                self.lower_and_tokenize_words)
-            preped_question2 = df["text_right"].apply(
-                                self.lower_and_tokenize_words)
-            preped_series.append(preped_question1)
-            preped_series.append(preped_question2)
+        for df in [self.train_df, self.val_df]:
+            if isinstance(df, pd.DataFrame):
+                df = self._rename_cols_and_drop_na(df)
+                preped_question1 = df["text_left"].apply(
+                                    self.lower_and_tokenize_words)
+                preped_question2 = df["text_right"].apply(
+                                    self.lower_and_tokenize_words)
+                preped_series.append(preped_question1)
+                preped_series.append(preped_question2)
 
         concat_series = pd.concat(preped_series)
         one_list_of_tokens = list(
@@ -67,4 +72,14 @@ class TextRetriever:
         )
         vocab = dict(Counter(one_list_of_tokens))
         vocab = self._filter_rare_words(vocab, min_occurancies)
-        return list(vocab.keys())
+        tokens = list(vocab.keys())
+        if save_path:
+            with open(save_path, 'wb') as fp:
+                pickle.dump(tokens, fp)
+        return tokens
+
+    @classmethod
+    def load_tokens(cls, load_path: str) -> List[str]:
+        with open(load_path, 'rb') as fp:
+            tokens = pickle.load(fp)
+        return tokens
