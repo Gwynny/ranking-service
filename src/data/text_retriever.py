@@ -1,16 +1,18 @@
 import itertools
+import json
 import nltk
 import pickle
 import string
 import pandas as pd
 from collections import Counter
+from os.path import isfile
 from typing import Dict, List
 
 
 class TextRetriever:
-    def __init__(self, train_path: str, val_path: str):
-        self.train_df = pd.read_csv(train_path, sep="\t")
-        self.val_df = pd.read_csv(val_path, sep="\t")
+    def __init__(self, train_path: str = None, val_path: str = None):
+        self.train_df = self._rename_cols_and_drop_na(pd.read_csv(train_path, sep="\t"))
+        self.val_df = self._rename_cols_and_drop_na(pd.read_csv(val_path, sep="\t"))
 
     def _rename_cols_and_drop_na(self, quora_df: pd.DataFrame) -> pd.DataFrame:
         # TODO: add docstring
@@ -58,7 +60,6 @@ class TextRetriever:
         preped_series = []
         for df in [self.train_df, self.val_df]:
             if isinstance(df, pd.DataFrame):
-                df = self._rename_cols_and_drop_na(df)
                 preped_question1 = df["text_left"].apply(
                                     self.lower_and_tokenize_words)
                 preped_question2 = df["text_right"].apply(
@@ -80,6 +81,51 @@ class TextRetriever:
 
     @classmethod
     def load_tokens(cls, load_path: str) -> List[str]:
-        with open(load_path, 'rb') as fp:
-            tokens = pickle.load(fp)
-        return tokens
+        if isfile(load_path):
+            with open(load_path, 'rb') as fp:
+                tokens = pickle.load(fp)
+            return tokens
+        else:
+            return None
+
+    def get_idx_to_text_mapping(self, type_df: str) -> Dict[str, str]:
+        assert type_df in ['train', 'val']
+        if type_df == 'train':
+            inp_df = self.train_df
+        else:
+            inp_df = self.val_df
+
+        inp_df['id_left'] = inp_df['id_left'].astype(str)
+        inp_df['id_right'] = inp_df['id_right'].astype(str)
+        left_dict = (
+            inp_df[
+                ['id_left', 'text_left']
+            ].drop_duplicates()
+            .set_index('id_left')
+            ['text_left'].to_dict()
+        )
+        right_dict = (
+            inp_df[
+                ['id_right', 'text_right']
+            ].drop_duplicates()
+            .set_index('id_right')
+            ['text_right'].to_dict()
+        )
+        left_dict.update(right_dict)
+        return left_dict
+
+    def get_and_save_documents(self, save_path: str):
+        documents = dict()
+        documents.update(self.get_idx_to_text_mapping('train'))
+        documents.update(self.get_idx_to_text_mapping('train'))
+        with open(save_path, 'w') as fp:
+            json.dump(documents, fp, sort_keys=True, indent=4)
+
+    @classmethod
+    def load_documents(cls, load_path: str) -> Dict[str, str]:
+        if isfile(load_path):
+            with open(load_path, 'r') as fp:
+                documents = json.load(fp)
+            return documents
+        else:
+            return None

@@ -6,43 +6,11 @@ from pandas.core.groupby.generic import DataFrameGroupBy
 from typing import Dict, List, Union, Callable, Tuple
 
 
-def prepare_quora_df(quora_df: pd.DataFrame) -> pd.DataFrame:
-    quora_df = quora_df.dropna(axis=0, how='any').reset_index(drop=True)
-    quora_df_fin = pd.DataFrame({
-        'id_left': quora_df['qid1'],
-        'id_right': quora_df['qid2'],
-        'text_left': quora_df['question1'],
-        'text_right': quora_df['question2'],
-        'label': quora_df['is_duplicate'].astype(int)
-    })
-    return quora_df_fin
-
-
-def get_idx_to_text_mapping(inp_df: pd.DataFrame) -> Dict[str, str]:
-    inp_df['id_left'] = inp_df['id_left'].astype(str)
-    inp_df['id_right'] = inp_df['id_right'].astype(str)
-    left_dict = (
-        inp_df[
-            ['id_left', 'text_left']
-        ].drop_duplicates()
-        .set_index('id_left')
-        ['text_left'].to_dict()
-    )
-    right_dict = (
-        inp_df[
-            ['id_right', 'text_right']
-        ].drop_duplicates()
-        .set_index('id_right')
-        ['text_right'].to_dict()
-    )
-    left_dict.update(right_dict)
-    return left_dict
-
-
 class RankingDataset(torch.utils.data.Dataset):
     OUT_DICT = Dict[str, torch.LongTensor]
 
-    def __init__(self, index_pairs_or_triplets: List[List[Union[str, float]]],
+    def __init__(self,
+                 index_pairs_or_triplets: List[List[Union[str, float]]],
                  idx_to_text_mapping: Dict[int, str],
                  vocab: Dict[str, int],
                  preproc_func: Callable,
