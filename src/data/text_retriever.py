@@ -11,10 +11,10 @@ from typing import Dict, List
 
 class TextRetriever:
     def __init__(self, train_path: str = None, val_path: str = None):
-        self.train_df = self._rename_cols_and_drop_na(pd.read_csv(train_path, sep="\t"))
-        self.val_df = self._rename_cols_and_drop_na(pd.read_csv(val_path, sep="\t"))
+        self.train_df = self.rename_cols_and_drop_na(pd.read_csv(train_path, sep="\t"))
+        self.val_df = self.rename_cols_and_drop_na(pd.read_csv(val_path, sep="\t"))
 
-    def _rename_cols_and_drop_na(self, quora_df: pd.DataFrame) -> pd.DataFrame:
+    def rename_cols_and_drop_na(self, quora_df: pd.DataFrame) -> pd.DataFrame:
         # TODO: add docstring
         quora_df = quora_df.dropna(axis=0, how="any").reset_index(drop=True)
         quora_df_cols_renamed = pd.DataFrame(
@@ -26,6 +26,8 @@ class TextRetriever:
                 "label": quora_df["is_duplicate"].astype(int),
             }
         )
+        quora_df_cols_renamed['id_left'] = quora_df_cols_renamed['id_left'].astype(str)
+        quora_df_cols_renamed['id_right'] = quora_df_cols_renamed['id_right'].astype(str)
         return quora_df_cols_renamed
 
     def _handle_punctuation(self, input_str: str) -> str:
@@ -95,8 +97,6 @@ class TextRetriever:
         else:
             inp_df = self.val_df
 
-        inp_df['id_left'] = inp_df['id_left'].astype(str)
-        inp_df['id_right'] = inp_df['id_right'].astype(str)
         left_dict = (
             inp_df[
                 ['id_left', 'text_left']

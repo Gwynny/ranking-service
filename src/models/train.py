@@ -1,7 +1,6 @@
 import torch
 import pandas as pd
-from src.data.make_dataset import prepare_quora_df, get_idx_to_text_mapping, collate_fn
-from src.data.make_dataset import TrainTripletsDataset, ValPairsDataset
+from src.data.make_dataset import RankingDataset, TrainTripletsDataset, ValPairsDataset
 from src.data.text_retriever import TextRetriever
 from src.features.build_embedding_matrix import EmbeddingMatrixBuilder
 from src.models.knrm_model import KNRM
@@ -36,11 +35,13 @@ class TrainKNRM:
         self.num_same_rel_ex = num_same_rel_ex
 
     def _get_ready_for_train(self):
-        self.train_df = prepare_quora_df(pd.read_csv(self.train_path, sep='\t'))
-        self.val_df = prepare_quora_df(pd.read_csv(self.val_path, sep='\t'))
+        self.retriever = TextRetriever(self.train_path, self.val_path)
+        self.train_df = self.retriever.rename_cols_and_drop_na(
+                            pd.read_csv(self.train_path, sep='\t'))
+        self.val_df = self.retriever.rename_cols_and_drop_na(
+                        pd.read_csv(self.val_path, sep='\t'))
 
         emb_builder = EmbeddingMatrixBuilder(self.random_vec_bound, self.seed)
-        self.retriever = TextRetriever(self.train_path, self.val_path)
         unique_tokens = self.retriever.get_all_tokens(
             min_occurancies=self.min_token_occurancies)
         emb_matrix, self.vocab, _ = emb_builder.create_glove_emb_from_file(
@@ -52,8 +53,8 @@ class TrainKNRM:
                          out_layers=self.out_layers,
                          kernel_num=self.num_kernels)
 
-        self.idx_to_text_mapping_train = get_idx_to_text_mapping(self.train_df)
-        self.idx_to_text_mapping_val = get_idx_to_text_mapping(self.val_df)
+        self.idx_to_text_mapping_train = self.retriever.get_idx_to_text_mapping('train')
+        self.idx_to_text_mapping_val = self.retriever.get_idx_to_text_mapping('val')
 
         val_pairs = ValPairsDataset.create_val_pairs(self.val_df)
         val_dataset = ValPairsDataset(
@@ -61,7 +62,7 @@ class TrainKNRM:
             vocab=self.vocab, preproc_func=self.retriever.lower_and_tokenize_words)
         self.val_dataloader = torch.utils.data.DataLoader(
             val_dataset, batch_size=self.batch_size, num_workers=0,
-            collate_fn=collate_fn, shuffle=False
+            collate_fn=RankingDataset.collate_fn, shuffle=False
         )
 
     def _get_train_dataset(self, epoch):
@@ -81,7 +82,7 @@ class TrainKNRM:
 
         train_dataloader = torch.utils.data.DataLoader(
                     train_dataset, batch_size=self.batch_size, num_workers=0,
-                    collate_fn=collate_fn, shuffle=True)
+                    collate_fn=RankingDataset.collate_fn, shuffle=True)
         return train_dataloader
 
     def fit(self, benchmark_ndcg_score=0.925):
