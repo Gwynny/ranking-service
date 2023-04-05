@@ -113,12 +113,13 @@ class TrainTripletsDataset(RankingDataset):
     def create_train_triplets(cls,
                               inp_df: pd.DataFrame,
                               seed: int,
-                              min_group_size: int = 3,
                               num_positive_examples: int = 4,
+                              num_random_positive_examples: int = 2,
                               num_same_rel_examples: int = 2
                               ) -> List[List[Union[str, float]]]:
+        MIN_GROUP_SIZE = 3
         np.random.seed(seed)
-        groups = RankingDataset.get_question_groups(inp_df, min_group_size)
+        groups = RankingDataset.get_question_groups(inp_df, MIN_GROUP_SIZE)
         all_right_ids = inp_df.id_right.values
         out_triplets = []
         for id_left, group in groups:
@@ -131,15 +132,19 @@ class TrainTripletsDataset(RankingDataset):
                 ones_ids = ones_df['id_right'].to_list()
                 np.random.shuffle(ones_ids)
                 zeros_ids = zeros_df['id_right'].to_list()
+
                 pos_labels_permutations = [
                     (one_id, zero_id) for one_id in ones_ids for zero_id in zeros_ids]
                 np.random.shuffle(pos_labels_permutations)
                 for ids in pos_labels_permutations[:num_positive_examples]:
                     out_triplets.append([id_left, ids[0], ids[1], 1.0])
 
-                random_neg_sample = np.random.choice(all_right_ids, 1, replace=False)
+                random_neg_sample = np.random.choice(all_right_ids,
+                                                     num_random_positive_examples,
+                                                     replace=False)
                 pos_sample_id = pos_labels_permutations[-1][0]
-                out_triplets.append([id_left, pos_sample_id, random_neg_sample[0], 1.0])
+                for i in range(len(random_neg_sample)):
+                    out_triplets.append([id_left, pos_sample_id, random_neg_sample[i], 1.0])
 
                 zeros_permutations = list(itertools.combinations(zeros_ids, 2))
                 np.random.shuffle(zeros_permutations)
@@ -161,11 +166,11 @@ class ValPairsDataset(RankingDataset):
     def create_val_pairs(cls,
                          inp_df: pd.DataFrame,
                          fill_top_to: int = 15,
-                         min_group_size: int = 2,
                          seed: int = 0
                          ) -> List[List[Union[str, float]]]:
+        MIN_GROUP_SIZE = 2
         np.random.seed(seed)
-        groups = RankingDataset.get_question_groups(inp_df, min_group_size)
+        groups = RankingDataset.get_question_groups(inp_df, MIN_GROUP_SIZE)
 
         all_ids = set(inp_df['id_left']).union(set(inp_df['id_right']))
         out_pairs = []
