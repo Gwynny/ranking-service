@@ -133,18 +133,15 @@ class TrainTripletsDataset(RankingDataset):
                 np.random.shuffle(ones_ids)
                 zeros_ids = zeros_df['id_right'].to_list()
 
-                pos_labels_permutations = [
-                    (one_id, zero_id) for one_id in ones_ids for zero_id in zeros_ids]
+                pos_labels_permutations = [(one_id, zero_id) for one_id in ones_ids for zero_id in zeros_ids]
                 np.random.shuffle(pos_labels_permutations)
                 for ids in pos_labels_permutations[:num_positive_examples]:
                     out_triplets.append([id_left, ids[0], ids[1], 1.0])
 
-                random_neg_sample = np.random.choice(all_right_ids,
-                                                     num_random_positive_examples,
-                                                     replace=False)
-                pos_sample_id = pos_labels_permutations[-1][0]
+                random_neg_sample = np.random.choice(all_right_ids, num_random_positive_examples, replace=False)
+                pos_sample_ids = np.random.choice(ones_ids, num_random_positive_examples, replace=True)
                 for i in range(len(random_neg_sample)):
-                    out_triplets.append([id_left, pos_sample_id, random_neg_sample[i], 1.0])
+                    out_triplets.append([id_left, pos_sample_ids[i], random_neg_sample[i], 1.0])
 
                 zeros_permutations = list(itertools.combinations(zeros_ids, 2))
                 np.random.shuffle(zeros_permutations)
