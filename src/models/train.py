@@ -1,5 +1,5 @@
+import mlflow
 import torch
-import pandas as pd
 from src.data.make_dataset import RankingDataset, TrainTripletsDataset, ValPairsDataset
 from src.data.text_retriever import TextRetriever
 from src.features.build_embedding_matrix import EmbeddingMatrixBuilder
@@ -14,7 +14,7 @@ class TrainKNRM:
                  min_token_occurancies: int, out_layers: List[int],
                  num_kernels: int, seed: int, sigma: float, lr: float,
                  num_epochs: int, change_every_num_ep: int, batch_size: int,
-                 num_pos_ex: int, num_same_rel_ex: int):
+                 num_pos_ex: int, num_rand_pos_ex: int, num_same_rel_ex: int):
         self.train_path = train_path
         self.val_path = val_path
         self.glove_path = glove_path
@@ -32,14 +32,13 @@ class TrainKNRM:
         self.change_every_num_ep = change_every_num_ep
         self.batch_size = batch_size
         self.num_pos_ex = num_pos_ex
+        self.num_rand_pos_ex = num_rand_pos_ex
         self.num_same_rel_ex = num_same_rel_ex
 
     def _get_ready_for_train(self):
         self.retriever = TextRetriever(self.train_path, self.val_path)
-        self.train_df = self.retriever.rename_cols_and_drop_na(
-                            pd.read_csv(self.train_path, sep='\t'))
-        self.val_df = self.retriever.rename_cols_and_drop_na(
-                        pd.read_csv(self.val_path, sep='\t'))
+        self.train_df = self.retriever.train_df
+        self.val_df = self.retriever.val_df
 
         emb_builder = EmbeddingMatrixBuilder(self.random_vec_bound, self.seed)
         unique_tokens = self.retriever.get_all_tokens(
@@ -71,18 +70,21 @@ class TrainKNRM:
                 self.train_df,
                 seed=epoch,
                 num_positive_examples=self.num_pos_ex,
+                num_random_positive_examples=self.num_rand_pos_ex,
                 num_same_rel_examples=self.num_same_rel_ex
             )
 
         train_dataset = TrainTripletsDataset(
             sampled_train_triplets,
             self.idx_to_text_mapping_train,
-            vocab=self.vocab, preproc_func=self.retriever.lower_and_tokenize_words
+            vocab=self.vocab,
+            preproc_func=self.retriever.lower_and_tokenize_words
         )
 
         train_dataloader = torch.utils.data.DataLoader(
                     train_dataset, batch_size=self.batch_size, num_workers=0,
-                    collate_fn=RankingDataset.collate_fn, shuffle=True)
+                    collate_fn=RankingDataset.collate_fn, shuffle=True,
+                    generator=torch.manual_seed(epoch))
         return train_dataloader
 
     def fit(self, benchmark_ndcg_score=0.925):
@@ -102,6 +104,6 @@ class TrainKNRM:
                 opt.step()
 
             val_ndcg = check_ndcg_on_val_set(self.knrm, self.val_dataloader)
-            print(f'Epoch: {ep}, validation ndcg {val_ndcg}')
+            mlflow.log_metric("val_ndcg_by_epoch", val_ndcg, step=ep)
             if val_ndcg > benchmark_ndcg_score:
                 break
