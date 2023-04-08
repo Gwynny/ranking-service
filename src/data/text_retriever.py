@@ -11,13 +11,17 @@ from typing import Dict, List
 
 class TextRetriever:
     def __init__(self, train_path: str = None, val_path: str = None):
-        self.train_df = self.rename_cols_and_drop_na(pd.read_csv(train_path, sep="\t"))
-        self.val_df = self.rename_cols_and_drop_na(pd.read_csv(val_path, sep="\t"))
+        if train_path:
+            self.train_df = self.rename_cols_and_drop_na(
+                                pd.read_csv(train_path, sep="\t"))
+        if val_path:
+            self.val_df = self.rename_cols_and_drop_na(
+                            pd.read_csv(val_path, sep="\t"))
 
     def rename_cols_and_drop_na(self, quora_df: pd.DataFrame) -> pd.DataFrame:
         # TODO: add docstring
         quora_df = quora_df.dropna(axis=0, how="any").reset_index(drop=True)
-        quora_df_cols_renamed = pd.DataFrame(
+        renamed_quora_df = pd.DataFrame(
             {
                 "id_left": quora_df["qid1"],
                 "id_right": quora_df["qid2"],
@@ -26,9 +30,9 @@ class TextRetriever:
                 "label": quora_df["is_duplicate"].astype(int),
             }
         )
-        quora_df_cols_renamed['id_left'] = quora_df_cols_renamed['id_left'].astype(str)
-        quora_df_cols_renamed['id_right'] = quora_df_cols_renamed['id_right'].astype(str)
-        return quora_df_cols_renamed
+        renamed_quora_df['id_left'] = renamed_quora_df['id_left'].astype(str)
+        renamed_quora_df['id_right'] = renamed_quora_df['id_right'].astype(str)
+        return renamed_quora_df
 
     def _handle_punctuation(self, input_str: str) -> str:
         # TODO: add docstring
@@ -117,7 +121,7 @@ class TextRetriever:
     def get_and_save_documents(self, save_path: str):
         documents = dict()
         documents.update(self.get_idx_to_text_mapping('train'))
-        documents.update(self.get_idx_to_text_mapping('train'))
+        documents.update(self.get_idx_to_text_mapping('val'))
         with open(save_path, 'w') as fp:
             json.dump(documents, fp, sort_keys=True, indent=4)
 
