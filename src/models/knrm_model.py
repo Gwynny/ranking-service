@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 
 class GaussianKernel(torch.nn.Module):
@@ -16,19 +16,27 @@ class GaussianKernel(torch.nn.Module):
 
 
 class KNRM(torch.nn.Module):
-    def __init__(self, embedding_matrix: np.ndarray,
-                 freeze_embeddings: bool,
+    def __init__(self, embedding_matrix: Optional[np.ndarray] = None,
+                 emb_path: Optional[str] = None,
+                 mlp_path: Optional[str] = None,
+                 freeze_embeddings: bool = True,
                  kernel_num: int = 21,
                  sigma: float = 0.1,
                  exact_sigma: float = 0.001,
-                 out_layers: List[int] = [10, 5]):
+                 out_layers: List[int] = []):
         super().__init__()
+        if embedding_matrix is not None:
+            weight = torch.FloatTensor(embedding_matrix)
+        elif emb_path is not None:
+            weight = torch.load(emb_path)['weight']
+        else:
+            raise ValueError("Either embedding_matrix or emb_path must be provided.")
+
         self.embeddings = torch.nn.Embedding.from_pretrained(
-            torch.FloatTensor(embedding_matrix),
+            weight,
             freeze=freeze_embeddings,
             padding_idx=0
         )
-
         self.kernel_num = kernel_num
         self.sigma = sigma
         self.exact_sigma = exact_sigma
@@ -36,6 +44,8 @@ class KNRM(torch.nn.Module):
 
         self.kernels = self._get_kernels_layers()
         self.mlp = self._get_mlp()
+        if mlp_path:
+            self.mlp.load_state_dict(torch.load(mlp_path))
         self.out_activation = torch.nn.Sigmoid()
 
     def _get_kernels_layers(self) -> torch.nn.ModuleList:
