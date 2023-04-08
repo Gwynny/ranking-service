@@ -59,10 +59,7 @@ class RankingDataset(torch.utils.data.Dataset):
             return ret_left, labels
 
     @classmethod
-    def get_question_groups(cls,
-                            inp_df: pd.DataFrame,
-                            min_group_size: int = 3
-                            ) -> DataFrameGroupBy:
+    def get_question_groups(cls, inp_df: pd.DataFrame, min_group_size: int = 3) -> DataFrameGroupBy:
         inp_df_select = inp_df[['id_left', 'id_right', 'label']]
         inf_df_group_sizes = inp_df_select.groupby('id_left').size()
         leftids_to_use = list(
@@ -178,11 +175,8 @@ class ValPairsDataset(RankingDataset):
             num_pad_items = max(0, fill_top_to - sum_len)
 
             if num_pad_items > 0:
-                cur_chosen = set(ones_ids).union(
-                    set(zeroes_ids)).union({id_left})
-                pad_sample = np.random.choice(
-                    list(all_ids - cur_chosen), num_pad_items,
-                    replace=False).tolist()
+                cur_chosen = set(ones_ids).union(set(zeroes_ids)).union({id_left})
+                pad_sample = np.random.choice(list(all_ids - cur_chosen), num_pad_items, replace=False).tolist()
             else:
                 pad_sample = []
 

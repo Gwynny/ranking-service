@@ -12,11 +12,9 @@ from typing import Dict, List
 class TextRetriever:
     def __init__(self, train_path: str = None, val_path: str = None):
         if train_path:
-            self.train_df = self.rename_cols_and_drop_na(
-                                pd.read_csv(train_path, sep="\t"))
+            self.train_df = self.rename_cols_and_drop_na(pd.read_csv(train_path, sep="\t"))
         if val_path:
-            self.val_df = self.rename_cols_and_drop_na(
-                            pd.read_csv(val_path, sep="\t"))
+            self.val_df = self.rename_cols_and_drop_na(pd.read_csv(val_path, sep="\t"))
 
     def rename_cols_and_drop_na(self, quora_df: pd.DataFrame) -> pd.DataFrame:
         # TODO: add docstring
@@ -36,8 +34,7 @@ class TextRetriever:
 
     def _handle_punctuation(self, input_str: str) -> str:
         # TODO: add docstring
-        translator = str.maketrans(string.punctuation,
-                                   " " * len(string.punctuation))
+        translator = str.maketrans(string.punctuation, " " * len(string.punctuation))
         new_str = input_str.translate(translator)
         return new_str
 
@@ -48,37 +45,28 @@ class TextRetriever:
         splitted_doc = nltk.word_tokenize(lowered_str)
         return splitted_doc
 
-    def _filter_rare_words(self,
-                           vocab: Dict[str, int],
-                           min_occurancies: int
-                           ) -> Dict[str, int]:
+    def _filter_rare_words(self, vocab: Dict[str, int], min_occurancies: int) -> Dict[str, int]:
         # TODO: add docstring
         filtered_vocab = {
             x: count for x, count in vocab.items() if count >= min_occurancies
         }
         return filtered_vocab
 
-    def get_all_tokens(self,
-                       min_occurancies: int,
-                       save_path: str = None
-                       ) -> List[str]:
+    def get_all_tokens(self, min_occurancies: int, save_path: str = None) -> List[str]:
         # TODO: add docstring
         preped_series = []
         for df in [self.train_df, self.val_df]:
             if isinstance(df, pd.DataFrame):
-                preped_question1 = df["text_left"].apply(
-                                    self.lower_and_tokenize_words)
-                preped_question2 = df["text_right"].apply(
-                                    self.lower_and_tokenize_words)
+                preped_question1 = df["text_left"].apply(self.lower_and_tokenize_words)
+                preped_question2 = df["text_right"].apply(self.lower_and_tokenize_words)
                 preped_series.append(preped_question1)
                 preped_series.append(preped_question2)
 
         concat_series = pd.concat(preped_series)
-        one_list_of_tokens = list(
-            itertools.chain.from_iterable(concat_series.to_list())
-        )
+        one_list_of_tokens = list(itertools.chain.from_iterable(concat_series.to_list()))
         vocab = dict(Counter(one_list_of_tokens))
         vocab = self._filter_rare_words(vocab, min_occurancies)
+
         tokens = list(vocab.keys())
         if save_path:
             with open(save_path, 'wb') as fp:

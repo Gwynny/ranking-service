@@ -24,8 +24,7 @@ def check_ndcg_on_val_set(model: torch.nn.Module,
                           val_dataloader: torch.utils.data.DataLoader
                           ) -> float:
     labels_and_groups = val_dataloader.dataset.index_pairs_or_triplets
-    labels_and_groups = pd.DataFrame(labels_and_groups,
-                                     columns=['left_id', 'right_id', 'rel'])
+    labels_and_groups = pd.DataFrame(labels_and_groups, columns=['left_id', 'right_id', 'rel'])
 
     all_preds = []
     for batch in (val_dataloader):
@@ -39,8 +38,7 @@ def check_ndcg_on_val_set(model: torch.nn.Module,
     ndcgs = []
     for cur_id in labels_and_groups.left_id.unique():
         cur_df = labels_and_groups[labels_and_groups.left_id == cur_id]
-        ndcg = ndcg_k(cur_df.rel.values.reshape(-1),
-                      cur_df.preds.values.reshape(-1))
+        ndcg = ndcg_k(cur_df.rel.values.reshape(-1), cur_df.preds.values.reshape(-1))
         if np.isnan(ndcg):
             ndcgs.append(0)
         else:

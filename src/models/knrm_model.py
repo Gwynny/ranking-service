@@ -32,11 +32,7 @@ class KNRM(torch.nn.Module):
         else:
             raise ValueError("Either embedding_matrix or emb_path must be provided.")
 
-        self.embeddings = torch.nn.Embedding.from_pretrained(
-            weight,
-            freeze=freeze_embeddings,
-            padding_idx=0
-        )
+        self.embeddings = torch.nn.Embedding.from_pretrained(weight, freeze=freeze_embeddings, padding_idx=0)
         self.kernel_num = kernel_num
         self.sigma = sigma
         self.exact_sigma = exact_sigma
@@ -73,8 +69,7 @@ class KNRM(torch.nn.Module):
         layers.append(torch.nn.Linear(self.out_layers[-1], 1))
         return torch.nn.Sequential(*layers)
 
-    def forward(self, input_1: Dict[str, torch.Tensor],
-                input_2: Dict[str, torch.Tensor]) -> torch.FloatTensor:
+    def forward(self, input_1: Dict[str, torch.Tensor], input_2: Dict[str, torch.Tensor]) -> torch.FloatTensor:
         logits_1 = self.predict(input_1)
         logits_2 = self.predict(input_2)
 
@@ -83,9 +78,7 @@ class KNRM(torch.nn.Module):
         out = self.out_activation(logits_diff)
         return out
 
-    def _get_matching_matrix(self, query: torch.Tensor,
-                             doc: torch.Tensor
-                             ) -> torch.FloatTensor:
+    def _get_matching_matrix(self, query: torch.Tensor, doc: torch.Tensor) -> torch.FloatTensor:
         # https://stackoverflow.com/questions/50411191/
         # how-to-compute-the-cosine-similarity-in-pytorch-for-all-rows-in-a-matrix-with-re
         eps = 1e-8

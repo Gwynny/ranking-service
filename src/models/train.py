@@ -9,8 +9,8 @@ from typing import List
 
 
 class TrainKNRM:
-    def __init__(self, train_path: str, val_path: str,
-                 glove_path: str, freeze_emb: bool, random_vec_bound: float,
+    def __init__(self, train_path: str, val_path: str, glove_path: str,
+                 freeze_emb: bool, random_vec_bound: float,
                  min_token_occurancies: int, out_layers: List[int],
                  num_kernels: int, seed: int, sigma: float, lr: float,
                  num_epochs: int, change_every_num_ep: int, batch_size: int,
@@ -22,15 +22,17 @@ class TrainKNRM:
         self.freeze_emb = freeze_emb
         self.seed = seed
         self.random_vec_bound = random_vec_bound
-
         self.min_token_occurancies = min_token_occurancies
+
         self.out_layers = out_layers
         self.num_kernels = num_kernels
         self.sigma = sigma
+
         self.lr = lr
         self.num_epochs = num_epochs
         self.change_every_num_ep = change_every_num_ep
         self.batch_size = batch_size
+
         self.num_pos_ex = num_pos_ex
         self.num_rand_pos_ex = num_rand_pos_ex
         self.num_same_rel_ex = num_same_rel_ex
@@ -41,10 +43,8 @@ class TrainKNRM:
         self.val_df = self.retriever.val_df
 
         emb_builder = EmbeddingMatrixBuilder(self.random_vec_bound, self.seed)
-        unique_tokens = self.retriever.get_all_tokens(
-            min_occurancies=self.min_token_occurancies)
-        emb_matrix, self.vocab, _ = emb_builder.create_glove_emb_from_file(
-                                        self.glove_path, unique_tokens)
+        unique_tokens = self.retriever.get_all_tokens(min_occurancies=self.min_token_occurancies)
+        emb_matrix, self.vocab, _ = emb_builder.create_glove_emb_from_file(self.glove_path, unique_tokens)
         torch.manual_seed(self.seed)
         self.knrm = KNRM(emb_matrix,
                          freeze_embeddings=self.freeze_emb,
@@ -57,11 +57,17 @@ class TrainKNRM:
 
         val_pairs = ValPairsDataset.create_val_pairs(self.val_df)
         val_dataset = ValPairsDataset(
-            val_pairs, self.idx_to_text_mapping_val,
-            vocab=self.vocab, preproc_func=self.retriever.lower_and_tokenize_words)
+            val_pairs,
+            self.idx_to_text_mapping_val,
+            vocab=self.vocab,
+            preproc_func=self.retriever.lower_and_tokenize_words)
+
         self.val_dataloader = torch.utils.data.DataLoader(
-            val_dataset, batch_size=self.batch_size, num_workers=0,
-            collate_fn=RankingDataset.collate_fn, shuffle=False
+            val_dataset,
+            batch_size=self.batch_size,
+            num_workers=0,
+            collate_fn=RankingDataset.collate_fn,
+            shuffle=False
         )
 
     def _get_train_dataset(self, epoch):
