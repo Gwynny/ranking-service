@@ -62,12 +62,8 @@ class RankingDataset(torch.utils.data.Dataset):
     def get_question_groups(cls, inp_df: pd.DataFrame, min_group_size: int = 3) -> DataFrameGroupBy:
         inp_df_select = inp_df[['id_left', 'id_right', 'label']]
         inf_df_group_sizes = inp_df_select.groupby('id_left').size()
-        leftids_to_use = list(
-            inf_df_group_sizes[inf_df_group_sizes >= min_group_size].index
-        )
-        groups = inp_df_select[
-                    inp_df_select['id_left'].isin(leftids_to_use)
-                ].groupby('id_left')
+        leftids_to_use = list(inf_df_group_sizes[inf_df_group_sizes >= min_group_size].index)
+        groups = inp_df_select[inp_df_select['id_left'].isin(leftids_to_use)].groupby('id_left')
         return groups
 
     def __len__(self):
@@ -122,9 +118,9 @@ class TrainTripletsDataset(RankingDataset):
         for id_left, group in groups:
             if group['label'].sum() == 0:
                 continue
+
             ones_df = group[group['label'] == 1]
             zeros_df = group[group['label'] == 0]
-
             if len(zeros_df) > 1:
                 ones_ids = ones_df['id_right'].to_list()
                 np.random.shuffle(ones_ids)

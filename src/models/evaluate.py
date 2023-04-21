@@ -20,9 +20,7 @@ def ndcg_k(ys_true: np.array, ys_pred: np.array, ndcg_top_k: int = 10) -> float:
     return float(case_dcg / ideal_dcg)
 
 
-def check_ndcg_on_val_set(model: torch.nn.Module,
-                          val_dataloader: torch.utils.data.DataLoader
-                          ) -> float:
+def check_ndcg_on_val_set(model: torch.nn.Module, val_dataloader: torch.utils.data.DataLoader) -> float:
     labels_and_groups = val_dataloader.dataset.index_pairs_or_triplets
     labels_and_groups = pd.DataFrame(labels_and_groups, columns=['left_id', 'right_id', 'rel'])
 
