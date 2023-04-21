@@ -42,15 +42,6 @@ Project Organization
     │                         the creator's initials, and a short `-` delimited description, e.g.
     │                         `1.0-jqp-initial-data-exploration`.
     │
-    ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
-    │
-    ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
-    │   └── figures        <- Generated graphics and figures to be used in reporting
-    │
-    ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
-    │                         generated with `pip freeze > requirements.txt`
-    │
-    ├── setup.py           <- makes project pip installable (pip install -e .) so src can be imported
     ├── src                <- Source code for use in this project.
     │   ├── __init__.py    <- Makes src a Python module
     │   │
@@ -65,8 +56,12 @@ Project Organization
     │   │   ├── predict_model.py
     │   │   └── train_model.py
     │
-    └── tox.ini            <- tox file with settings for running tox; see tox.readthedocs.io
-
+    └── .ignore files      <- To hide unnecessery data from push and build actions
+    │
+    └── poetry.lock        <- Poetry-related and env-related files
+    └── pyproject.toml
+    │
+    └── Dockerfile         <- Dockerfile for building images
 
 --------
 
